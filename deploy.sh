@@ -4,7 +4,13 @@
 set -e
 
 # Configuration
-# Load local configuration if present
+# 1. Auto-create deploy.env from template if missing
+if [ ! -f "deploy.env" ] && [ -f "deploy.env.example" ]; then
+    cp deploy.env.example deploy.env
+    echo -e "\033[1;33mCreated 'deploy.env' from template. Please configure it for future deployments.\033[0m"
+fi
+
+# 2. Load local configuration if present
 if [ -f "deploy.env" ]; then
     export $(grep -v '^#' deploy.env | xargs)
 fi
@@ -15,9 +21,21 @@ KEY="${DEPLOY_KEY:-Oracle-Ubuntu-24_copy.key}"
 REMOTE_DIR="/home/ubuntu/meraki-webhook-server"
 TARBALL="meraki_webhook_project.tar.gz"
 
+# 3. Prompt if IP is not set, and save it to deploy.env automatically
 if [ -z "$HOST" ]; then
     echo -e "\033[1;33mWarning: Target server host IP not set in deploy.env.\033[0m"
     read -p "Please enter the target server IP address: " HOST
+    
+    if [ -f "deploy.env" ]; then
+        # Check if DEPLOY_HOST line exists and replace it, or append
+        if grep -q "DEPLOY_HOST=" deploy.env; then
+            # Support both macOS (needs '') and Linux sed syntaxes
+            sed -i '' "s/DEPLOY_HOST=.*/DEPLOY_HOST=$HOST/" deploy.env 2>/dev/null || sed -i "s/DEPLOY_HOST=.*/DEPLOY_HOST=$HOST/" deploy.env
+        else
+            echo "DEPLOY_HOST=$HOST" >> deploy.env
+        fi
+        echo -e "\033[0;32m✓ IP address saved to deploy.env for future runs.\033[0m"
+    fi
 fi
 
 # Colors for output
