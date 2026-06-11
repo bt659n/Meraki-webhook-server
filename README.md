@@ -52,17 +52,26 @@ To bypass this buffering, the backend sets specific anti-buffering headers on th
 
 ## 🚀 Deployment Instructions
 
-### Local Prerequisites
-You deploy the container from your local Mac using the SSH key. Ensure you have:
-* The SSH key `Oracle-Ubuntu-24_copy.key` placed in the project root.
-* Standard `ssh` and `tar` commands.
+### Local Prerequisites & Setup
+1. Place your target SSH private key `Oracle-Ubuntu-24_copy.key` in the project root directory.
+2. Ensure you have standard `ssh` and `tar` commands installed locally.
+
+### Local Configuration (`deploy.env`)
+The deployment script uses a local configuration file `deploy.env` to store your server settings privately. This file is ignored by Git and will never be pushed to GitHub:
+* **Automatic Setup**: On your first run, `deploy.sh` will automatically create `deploy.env` from the template.
+* **Auto-Save**: If the server IP is not set, the script will ask you to enter it in your terminal, and then **automatically write and save it** to your local `deploy.env` so you do not have to type it again in future runs.
+* **Manual Setup**: You can manually copy the template and configure it:
+  ```bash
+  cp deploy.env.example deploy.env
+  ```
+  Then fill in your host IP (`DEPLOY_HOST`), user (`DEPLOY_USER`), and key filename (`DEPLOY_KEY`).
 
 ### Deploying (or Re-deploying)
-To package, upload, and run the server on the remote host, simply run the automated deployment script from your local Mac terminal:
+To package, upload, and run the server on the remote host, simply execute the script:
 ```bash
 bash deploy.sh
 ```
-The script will fix key permissions, compress assets, transfer them to the Oracle host, and boot up the container under Docker Compose.
+The script will secure SSH key permissions, compress assets, transfer them to the Oracle host, unpack them, and boot up the container under Docker Compose.
 
 ---
 
