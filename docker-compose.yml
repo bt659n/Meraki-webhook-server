@@ -1,0 +1,22 @@
+version: '3.8'
+
+services:
+  meraki-webhook-server:
+    build: .
+    container_name: meraki-webhook-server
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./data:/data
+    environment:
+      # The Shared Secret configured in the Meraki Dashboard (under organization webhooks settings)
+      # If empty, validation is bypassed (useful for initial tests).
+      - SHARED_SECRET=
+      
+      # The password required to unlock the web dashboard.
+      # If empty, the dashboard will be open to the public without password prompt.
+      - DASHBOARD_PASSWORD=
+      
+      # Path to SQLite database file inside the container volume
+      - DB_PATH=/data/webhooks.db

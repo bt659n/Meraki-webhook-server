@@ -1,0 +1,21 @@
+# Private Keys
+Oracle-Ubuntu-24_copy.key
+
+# SQLite Database
+data/
+*.db
+
+# Python
+venv/
+local_packages/
+pip_cache/
+__pycache__/
+*.pyc
+
+# Archives
+*.tar.gz
+meraki_webhook_project.tar.gz
+
+# System files
+.DS_Store
+Thumbs.db

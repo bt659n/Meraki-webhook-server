@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meraki Webhook Live Monitor</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <!-- FontAwesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Styling -->
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Top Navigation Header -->
+        <header class="app-header">
+            <div class="header-left">
+                <div class="logo">
+                    <i class="fa-solid fa-circle-nodes logo-icon"></i>
+                    <h1>Meraki <span>Webhook Monitor</span></h1>
+                </div>
+                <div id="connection-status" class="status-badge disconnected">
+                    <span class="status-dot"></span>
+                    <span id="status-text">Connecting...</span>
+                </div>
+            </div>
+            
+            <div class="header-right">
+                <div class="endpoint-url-box">
+                    <span class="endpoint-label">Endpoint:</span>
+                    <code id="endpoint-url">https://[your-domain]/webhook</code>
+                    <button id="copy-endpoint-btn" class="icon-btn" title="Copy endpoint URL">
+                        <i class="fa-regular fa-copy"></i>
+                    </button>
+                </div>
+                <button id="logout-btn" class="secondary-btn hide" title="Logout">
+                    <i class="fa-solid fa-sign-out-alt"></i> Logout
+                </button>
+            </div>
+        </header>
+
+        <!-- Stats Counter Section -->
+        <section class="stats-container">
+            <div class="stat-card" id="stat-total">
+                <div class="stat-icon-wrapper blue">
+                    <i class="fa-solid fa-bell"></i>
+                </div>
+                <div class="stat-info">
+                    <span class="stat-label">Total Webhooks</span>
+                    <span class="stat-val" id="count-total">0</span>
+                </div>
+            </div>
+            <div class="stat-card" id="stat-networks">
+                <div class="stat-icon-wrapper green">
+                    <i class="fa-solid fa-network-wired"></i>
+                </div>
+                <div class="stat-info">
+                    <span class="stat-label">Unique Networks</span>
+                    <span class="stat-val" id="count-networks">0</span>
+                </div>
+            </div>
+            <div class="stat-card" id="stat-devices">
+                <div class="stat-icon-wrapper purple">
+                    <i class="fa-solid fa-server"></i>
+                </div>
+                <div class="stat-info">
+                    <span class="stat-label">Unique Devices</span>
+                    <span class="stat-val" id="count-devices">0</span>
+                </div>
+            </div>
+            <div class="stat-card" id="stat-last-time">
+                <div class="stat-icon-wrapper orange">
+                    <i class="fa-regular fa-clock"></i>
+                </div>
+                <div class="stat-info">
+                    <span class="stat-label">Last Webhook</span>
+                    <span class="stat-val" id="count-last-time">Never</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Search and Filter Bar -->
+        <section class="filter-bar">
+            <div class="search-wrapper">
+                <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                <input type="text" id="search-input" placeholder="Search by Alert Type, Network Name, Device Serial...">
+            </div>
+            <div class="filter-actions">
+                <button id="clear-filters-btn" class="text-btn hide">Clear Filters</button>
+                <button id="clear-db-btn" class="danger-text-btn" title="Clear locally cached logs in dashboard">
+                    <i class="fa-regular fa-trash-can"></i> Clear Dashboard
+                </button>
+            </div>
+        </section>
+
+        <!-- Main Dashboard Split Layout -->
+        <main class="dashboard-main">
+            <!-- Left Side: Webhook Log Feed -->
+            <section class="feed-section">
+                <div class="section-header">
+                    <h2>Event Feed</h2>
+                    <span class="badge" id="feed-count">Showing 0 events</span>
+                </div>
+                <div class="feed-list" id="webhook-feed">
+                    <!-- Cards will be dynamically inserted here -->
+                    <div class="empty-state" id="feed-empty">
+                        <i class="fa-solid fa-inbox empty-icon"></i>
+                        <p>No webhooks received yet.</p>
+                        <p class="sub-text">Configure your Meraki Dashboard to send alerts to the endpoint URL.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Right Side: Selected Webhook Details Panel -->
+            <section class="details-section" id="detail-panel">
+                <div class="detail-empty-state" id="detail-empty">
+                    <i class="fa-solid fa-mouse-pointer empty-icon"></i>
+                    <h3>No Webhook Selected</h3>
+                    <p>Click on any webhook event in the list to view its complete payload details and metadata.</p>
+                </div>
+                
+                <div class="detail-content hide" id="detail-content">
+                    <div class="detail-header">
+                        <div>
+                            <span class="alert-badge" id="detail-alert-badge">Alert Type</span>
+                            <h3 id="detail-alert-title">Device Port Status Changed</h3>
+                        </div>
+                        <div class="detail-actions">
+                            <button id="copy-json-btn" class="primary-btn">
+                                <i class="fa-regular fa-copy"></i> Copy JSON
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="detail-meta-grid">
+                        <div class="meta-item">
+                            <span class="meta-lbl">Occurred At</span>
+                            <span class="meta-val" id="detail-time">2026-06-10 22:15:00</span>
+                        </div>
+                        <div class="meta-item">
+                            <span class="meta-lbl">Network</span>
+                            <span class="meta-val" id="detail-network">N/A</span>
+                        </div>
+                        <div class="meta-item">
+                            <span class="meta-lbl">Device Name</span>
+                            <span class="meta-val" id="detail-device-name">N/A</span>
+                        </div>
+                        <div class="meta-item">
+                            <span class="meta-lbl">Device Serial</span>
+                            <span class="meta-val" id="detail-device-serial">N/A</span>
+                        </div>
+                    </div>
+
+                    <div class="payload-container">
+                        <div class="payload-header">
+                            <span><i class="fa-solid fa-code"></i> Raw JSON Payload</span>
+                        </div>
+                        <pre class="json-code"><code id="detail-json-block"></code></pre>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Password Login Modal Overlay -->
+    <div id="login-overlay" class="login-overlay hide">
+        <div class="login-card">
+            <div class="login-icon">
+                <i class="fa-solid fa-lock"></i>
+            </div>
+            <h2>Dashboard Protected</h2>
+            <p>Please enter the dashboard password to access the Meraki live monitor.</p>
+            <form id="login-form">
+                <div class="form-group">
+                    <input type="password" id="password-input" placeholder="Enter password" required>
+                    <i class="fa-solid fa-key input-icon"></i>
+                </div>
+                <button type="submit" class="submit-btn">Unlock Dashboard</button>
+                <div id="login-error" class="login-error hide">Incorrect password. Please try again.</div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <!-- Application Script -->
+    <script src="/static/app.js"></script>
+</body>
+</html>
