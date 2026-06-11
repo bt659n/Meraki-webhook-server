@@ -1,5 +1,6 @@
-# Private Keys
+# Private Keys and Configs
 Oracle-Ubuntu-24_copy.key
+deploy.env
 
 # SQLite Database
 data/

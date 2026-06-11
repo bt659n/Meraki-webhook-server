@@ -4,11 +4,21 @@
 set -e
 
 # Configuration
-HOST="192.9.189.163"
-USER="ubuntu"
-KEY="Oracle-Ubuntu-24_copy.key"
+# Load local configuration if present
+if [ -f "deploy.env" ]; then
+    export $(grep -v '^#' deploy.env | xargs)
+fi
+
+HOST="${DEPLOY_HOST:-}"
+USER="${DEPLOY_USER:-ubuntu}"
+KEY="${DEPLOY_KEY:-Oracle-Ubuntu-24_copy.key}"
 REMOTE_DIR="/home/ubuntu/meraki-webhook-server"
 TARBALL="meraki_webhook_project.tar.gz"
+
+if [ -z "$HOST" ]; then
+    echo -e "\033[1;33mWarning: Target server host IP not set in deploy.env.\033[0m"
+    read -p "Please enter the target server IP address: " HOST
+fi
 
 # Colors for output
 GREEN='\033[0;32m'
